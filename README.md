@@ -1,0 +1,149 @@
+# Monolith to Microservices
+
+We build upon the repo [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository but will adapt some steps here.
+Basically, we'll try to avoid to build our artifacts by our own in this project. Instead, we will use pre-built docker images.
+
+## Instructions
+
+### Step 1: Create the database
+
+```
+oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=ticketmonster mysql:5.5
+```
+
+### Step 2: Deploy the monolithic TicketMonster
+
+lift and shift the monolith to OpenShift
+
+#### Create new application
+```
+oc new-app -e MYSQL_SERVICE_HOST=your-mysql-host -e MYSQL_SERVICEP_PORT=3306 --docker-image=jetzlstorfer/ticket-monster-monolith:latest
+
+```
+
+#### Expose the TicketMonster service
+
+```
+oc expose service ticket-monster-monolith --name=monolith 
+```
+
+#### Test your TicketMonster monolith
+
+Get the public IP of your ticketmonster:
+```
+oc get routes
+```
+Open a browser :)
+
+### Step 3: decouple the UI from the monolith
+
+#### Edit httpd conf to redirect service calls to monolith
+
+```
+# proxy to redirect to the monolith
+ProxyPass "/rest" "http://backend-<YOURURL>/rest"
+ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
+```
+
+#### Build, push and deploy the UI
+```` 
+docker build -t jetzlstorfer/tm-ui-v1:latest .
+docker push jetzlstorfer/tm-ui-v1:latest
+oc new-app --docker-image=jetzlstorfer/tm-ui-v1:latest
+oc expose service tm-ui-v1
+```` 
+
+create another route for ticket monster monolith under the name "backend".
+```
+oc expose service ticket-monster-monolith --name=backend
+```
+
+
+
+
+### Step 4: Generate load and hit the TicketMonster
+
+optional
+
+### Step 5: Identify a microservice with the help of Dynatrace
+
+Lets follow on [identifying a microservice](https://www.dynatrace.com/news/blog/monolith-to-microservices-how-to-identify-your-first-microservice/)
+and [identifying its domain model](https://www.dynatrace.com/news/blog/monolith-to-microservices-the-microservice-and-its-domain-model/).
+
+
+### Step 6: Build and deploy the microservice
+
+1. Create the database for the microservice
+    ```
+    oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=orders mysql:5.5
+    ```
+1. Setup database
+    ```
+    oc rsync src/main/resources/db/migration/ <your-db-pod>:/var/lib/mysql
+    ```
+1. Connect to the DB pod and execute SQL statements 
+    ```
+    oc rsh <your-db-pod>
+    mysql -u root orders < V1__0_ordersdb-schema.sql
+    mysql -u root orders < V1__1_ordersdb-data.sql
+    ```
+
+Now the database is prepared to be able to store orders.
+
+#### Deploy the microservice
+
+1. Edit the database connection strings in the ```\src\main\resources\application-mysql.properties``` file:
+    ```properties
+    spring.datasource.legacyDS.url=jdbc:mysql://<yourticketmonsterdb>:3306/ticketmonster?useSSL=false
+    spring.datasource.legacyDS.username=ticket
+    spring.datasource.legacyDS.password=monster
+    spring.datasource.legacyDS.driverClassName=com.mysql.jdbc.Driver
+
+    spring.datasource.ordersDS.url=jdbc:mysql://<yourorderdb>:3306/orders?useSSL=false
+    spring.datasource.ordersDS.username=ticket
+    spring.datasource.ordersDS.password=monster
+    spring.datasource.ordersDS.driverClassName=com.mysql.jdbc.Driver
+    ```
+1. Build the application with Maven
+    ```
+    mvn clean install -P mysql,kubernetes fabric8:build -D docker.image.name=<yourdocker>/orders-service:latest -D skipTests
+    ```
+1. Build the Docker image in ```\target\docker\<your dockerhub account>\orders-service\latest\build\```
+    ```
+    docker build . -t <yourdocker>/orders-service:latest
+    ``` 
+1. Push the application to Dockerhub
+    ```
+    docker push <yourdocker>/orders-service:latest
+    ```
+1. Create a new application in OpenShift
+    ```
+    oc new-app --docker-image=<yourdocker>/orders-service:latest
+    ```
+
+By the end of this steps, you have the orders service in place. In order to actually call this service, set the according feature flag in your FF4J console.
+
+#### Deploy a new backend version for the microservice
+
+TODO url to orders service via env variables
+```
+oc new-app -e =TODO --docker-image=jetzlstorfer/backend-v2:latest
+oc expose service backend-v2 
+```
+
+we need to reroute the backend route to hit the new backend service
+```
+oc set route-backends backend backend=0 backend-v2=100 
+```
+
+
+### Step 7: Switch feature flag and test your microservice
+
+1. In your browser, navigate to your `ff4j` console: `https://<yourbackend<-XX.<ip>/ff4j-console` .
+You will be able to switch on/off your new microservice from here. 
+
+1. When making an order now the order will be operated and persisted by the OrderService instead of the monolithic booking service (in fact, the booking service calls the OrderService).
+
+1. We can verify the service flow in Dynatrace. 
+
+
