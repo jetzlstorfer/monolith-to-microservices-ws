@@ -1,9 +1,20 @@
 # Monolith to Microservices
 
+![tm](assets/ticketmonster.png)
+
 We build upon the repo [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository but will adapt some steps here.
 Basically, we'll try to avoid to build our artifacts by our own in this project. Instead, we will use pre-built docker images.
 
 ## Instructions
+
+### Step 0: Clone the TicketMonster
+
+We will need some sources of the [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository, so we will clone it first.
+
+```
+git clone https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift.git
+```
+However, we will use prebuilt images during the course of the workshop to save some time.
 
 ### Step 1: Create the database
 
