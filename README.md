@@ -7,67 +7,88 @@ Basically, we'll try to avoid to build our artifacts by our own in this project.
 
 ## Instructions
 
-### Step 0: Clone the TicketMonster
+### Step 0: Prepare your environment
 
-We will need some sources of the [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository, so we will clone it first.
+1. Set up a management zone to "filter" your own OpenShift project. Login to the Dynatrace tenant `https://nbt24337.live.dynatrace.com/` and create a management zone "wsX" (X.. your assigned number)
 
-```
-git clone https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift.git
-```
-However, we will use prebuilt images during the course of the workshop to save some time.
+1. We will need some sources of the [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository, so we will clone it first.
+
+    ```
+    git clone https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift.git
+    ```
+    However, we will use prebuilt images during the course of the workshop to save some time.
+
+1. Create the project in OpenShift
+    ```
+    oc login <OurClusterIP>
+    ```
+    your user: `wsX` where X... your assigned number<br>
+    password: ask your instructor :) 
+    ```
+    oc new-project wsX
+    ```
 
 ### Step 1: Create the database
 
-```
-oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=ticketmonster mysql:5.5
-```
+1. Deploy a MySql database service
+    ```
+    oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=ticketmonster mysql:5.5
+    ```
+
+1. Get the IP of the service
+     ```
+    oc get svc
+    ```
+
 
 ### Step 2: Deploy the monolithic TicketMonster
 
 lift and shift the monolith to OpenShift
 
-#### Create new application
-```
-oc new-app -e MYSQL_SERVICE_HOST=your-mysql-host -e MYSQL_SERVICEP_PORT=3306 --docker-image=jetzlstorfer/ticket-monster-monolith:latest
+1. Create new application
+    ```
+    oc new-app -e MYSQL_SERVICE_HOST=your-mysql-host -e MYSQL_SERVICE_PORT=3306 --docker-image=jetzlstorfer/ticket-monster-monolith:latest
 
-```
+    ```
 
-#### Expose the TicketMonster service
+1. Expose the TicketMonster service
+    ```
+    oc expose service ticket-monster-monolith --name=monolith 
+    ```
 
-```
-oc expose service ticket-monster-monolith --name=monolith 
-```
+1. Test your TicketMonster monolith
 
-#### Test your TicketMonster monolith
-
-Get the public IP of your ticketmonster:
-```
-oc get routes
-```
-Open a browser :)
+    Get the public IP of your ticketmonster:
+    ```
+    oc get routes
+    ```
+    Open a browser :)
 
 ### Step 3: decouple the UI from the monolith
 
-#### Edit httpd conf to redirect service calls to monolith
+1. For this step we need the `tm-ui-v1` sub-project.
 
-```
-# proxy to redirect to the monolith
-ProxyPass "/rest" "http://backend-<YOURURL>/rest"
-ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
-```
+1. Edit httpd conf to redirect service calls to monolith
 
-#### Build, push and deploy the UI
-```` 
-docker build -t jetzlstorfer/tm-ui-v1:latest .
-docker push jetzlstorfer/tm-ui-v1:latest
-oc new-app --docker-image=jetzlstorfer/tm-ui-v1:latest
-oc expose service tm-ui-v1
-```` 
+    ```
+    # proxy to redirect to the monolith
+    ProxyPass "/rest" "http://backend-<YOURURL>/rest"
+    ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
+    ```
 
-create another route for ticket monster monolith under the name "backend".
-```
-oc expose service ticket-monster-monolith --name=backend
-```
+1. Build, push and deploy the UI
+    ```` 
+    docker build -t jetzlstorfer/tm-ui-v1:latest .
+    docker push jetzlstorfer/tm-ui-v1:latest
+    oc new-app --docker-image=jetzlstorfer/tm-ui-v1:latest
+    oc expose service tm-ui-v1
+    ```` 
+
+    create another route for ticket monster monolith under the name "backend".
+    ```
+    oc expose service ticket-monster-monolith --name=backend
+    oc get routes
+    ```
 
 
 
@@ -79,27 +100,34 @@ optional
 ### Step 5: Identify a microservice with the help of Dynatrace
 
 Lets follow on [identifying a microservice](https://www.dynatrace.com/news/blog/monolith-to-microservices-how-to-identify-your-first-microservice/)
+
 and [identifying its domain model](https://www.dynatrace.com/news/blog/monolith-to-microservices-the-microservice-and-its-domain-model/).
 
 
 ### Step 6: Build and deploy the microservice
 
+1. Switch to the `orders-service/` directory.
+
 1. Create the database for the microservice
     ```
-    oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=orders mysql:5.5
+    oc new-app -e MYSQL_USER=ticket -e MYSQL_PASSWORD=monster -e MYSQL_DATABASE=orders mysql:5.5 --name=orders-db
     ```
 1. Setup database
     ```
+    oc get pods
+
     oc rsync src/main/resources/db/migration/ <your-db-pod>:/var/lib/mysql
     ```
 1. Connect to the DB pod and execute SQL statements 
     ```
     oc rsh <your-db-pod>
+    cd ~
     mysql -u root orders < V1__0_ordersdb-schema.sql
     mysql -u root orders < V1__1_ordersdb-data.sql
+    exit
     ```
 
-Now the database is prepared to be able to store orders.
+1. Now the database is prepared to be able to store orders.
 
 #### Deploy the microservice
 
@@ -114,6 +142,10 @@ Now the database is prepared to be able to store orders.
     spring.datasource.ordersDS.username=ticket
     spring.datasource.ordersDS.password=monster
     spring.datasource.ordersDS.driverClassName=com.mysql.jdbc.Driver
+    ```
+    You'll get this information with
+    ```
+    oc get services
     ```
 1. Build the application with Maven
     ```
@@ -131,14 +163,17 @@ Now the database is prepared to be able to store orders.
     ```
     oc new-app --docker-image=<yourdocker>/orders-service:latest
     ```
+1. Expose your microservice
+    ```
+    oc expose service orders-service
+    ```
 
 By the end of this steps, you have the orders service in place. In order to actually call this service, set the according feature flag in your FF4J console.
 
 #### Deploy a new backend version for the microservice
 
-TODO url to orders service via env variables
 ```
-oc new-app -e =TODO --docker-image=jetzlstorfer/backend-v2:latest
+oc new-app -e ORDERS_SERVICE_IP=orders-service-ws1.18.207.174.41.xip.io --docker-image=jetzlstorfer/backend-v2:latest
 oc expose service backend-v2 
 ```
 
