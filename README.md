@@ -127,7 +127,7 @@ and [identifying its domain model](https://www.dynatrace.com/news/blog/monolith-
     ```
     oc get pods
 
-    oc rsync src/main/resources/db/migration/ <your-db-pod>:/var/lib/mysql
+    oc rsync src/main/resources/db/migration/ <your-db-pod>:/var/lib/mysql --no-perms=true
     ```
 1. Connect to the DB pod and execute SQL statements 
     ```
