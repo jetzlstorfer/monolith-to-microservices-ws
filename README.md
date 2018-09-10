@@ -29,7 +29,7 @@ Basically, we'll try to avoid to build our artifacts by our own in this project.
 
 1. Create the project in OpenShift
     ```
-    oc login <OurClusterIP>
+    oc login <OurClusterIP:port>
     ```
     your user: `wsXX` where XX... your assigned number<br>
     password: ask your instructor :) 
