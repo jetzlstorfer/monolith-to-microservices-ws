@@ -9,7 +9,8 @@ Basically, we'll try to avoid to build our artifacts by our own in this project.
 
 ### Step 0: Prepare your environment
 
-1. Set up a management zone to "filter" your own OpenShift project. Login to the Dynatrace tenant `https://nbt24337.live.dynatrace.com/` and create a management zone "wsX" (X.. your assigned number)
+1. Set up a management zone to "filter" your own OpenShift project. Login to the Dynatrace tenant and create a management zone "wsX" (X.. your assigned number). Please ask your instructor for Dynatrace tenant and login credentials.
+<!--  `https://nbt24337.live.dynatrace.com/` -->
 
 1. We will need some sources of the [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository, so we will clone it first.
 
