@@ -70,18 +70,17 @@ lift and shift the monolith to OpenShift
 
 1. For this step we need the `tm-ui-v1` sub-project.
     
-1. Create another route for ticket monster monolith under the name "backend".
-    ```
-    oc expose service ticket-monster-monolith --name=backend
-    oc get routes
-    ```
-    
-1. Edit httpd conf to redirect service calls to monolith
-
+1. Edit httpd conf to redirect service calls to the monolith which we use a our backend-service
     ```
     # proxy to redirect to the monolith
     ProxyPass "/rest" "http://backend-<YOURURL>/rest"
     ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
+    ```
+    
+1. Create another route for ticket monster monolith under the name "backend".
+    ```
+    oc expose service ticket-monster-monolith --name=backend
+    oc get routes
     ```
 
 1. Build, push and deploy the UI
@@ -97,7 +96,8 @@ lift and shift the monolith to OpenShift
 
 ### Step 4: Generate load and hit the TicketMonster
 
-optional
+optional - we skip this for now :)
+
 
 ### Step 5: Identify a microservice with the help of Dynatrace
 
