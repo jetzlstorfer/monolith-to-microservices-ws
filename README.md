@@ -24,6 +24,8 @@ Basically, we'll try to avoid to build our artifacts by our own in this project.
     ```
     your user: `wsX` where X... your assigned number<br>
     password: ask your instructor :) 
+    
+    After the successful login, create your own project:
     ```
     oc new-project wsX
     ```
