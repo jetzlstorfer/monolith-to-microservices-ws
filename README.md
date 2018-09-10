@@ -5,6 +5,14 @@
 We build upon the repo [monolith to microservices](https://github.com/dynatrace-innovationlab/monolith-to-microservice-openshift) repository but will adapt some steps here.
 Basically, we'll try to avoid to build our artifacts by our own in this project. Instead, we will use pre-built docker images.
 
+## Prerequisites
+
+1. OpenShift command line tool: [OpenShift documentation](https://docs.okd.io/latest/cli_reference/get_started_cli.html#installing-the-cli) / [Github Repository](https://github.com/openshift/origin/releases)
+1. [Docker](https://docs.docker.com/install/#supported-platforms) installed
+1. [Dockerhub account](https://hub.docker.com/)
+1. [Maven](https://maven.apache.org/) installed
+
+
 ## Instructions
 
 ### Step 0: Prepare your environment
