@@ -78,6 +78,12 @@ lift and shift the monolith to OpenShift
 ### Step 3: decouple the UI from the monolith
 
 1. For this step we need the `tm-ui-v1` sub-project.
+
+1. Create another route for ticket monster monolith under the name "backend".
+    ```
+    oc expose service ticket-monster-monolith --name=backend
+    oc get routes
+    ``` 
     
 1. Edit httpd conf to redirect service calls to the monolith which we use a our backend-service
     ```
@@ -86,17 +92,11 @@ lift and shift the monolith to OpenShift
     ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
     ```
     
-1. Create another route for ticket monster monolith under the name "backend".
-    ```
-    oc expose service ticket-monster-monolith --name=backend
-    oc get routes
-    ```
-
 1. Build, push and deploy the UI
     ```` 
-    docker build -t jetzlstorfer/tm-ui-v1:latest .
-    docker push jetzlstorfer/tm-ui-v1:latest
-    oc new-app --docker-image=jetzlstorfer/tm-ui-v1:latest
+    docker build -t <yourdocker>/tm-ui-v1:latest .
+    docker push <yourdocker>/tm-ui-v1:latest
+    oc new-app --docker-image=<yourdocker>/tm-ui-v1:latest
     oc expose service tm-ui-v1
     ```` 
 
