@@ -85,18 +85,9 @@ lift and shift the monolith to OpenShift
     oc get routes
     ``` 
     
-1. Edit httpd conf to redirect service calls to the monolith which we use a our backend-service
-    ```
-    # proxy to redirect to the monolith
-    ProxyPass "/rest" "http://backend-<YOURURL>/rest"
-    ProxyPassReverse "/rest" "http://backend-<YOURURL>/rest"
-    ```
-    
-1. Build, push and deploy the UI
+1. Deploy the UI
     ```` 
-    docker build -t <yourdocker>/tm-ui-v1:latest .
-    docker push <yourdocker>/tm-ui-v1:latest
-    oc new-app --docker-image=<yourdocker>/tm-ui-v1:latest
+    oc new-app -e BACKENDURL=<yourbackendurl> --docker-image=jetzlstorfer/tm-ui-v1:latest
     oc expose service tm-ui-v1
     ```` 
 
@@ -182,9 +173,9 @@ and [identifying its domain model](https://www.dynatrace.com/news/blog/monolith-
 By the end of this steps, you have the orders service in place. In order to actually call this service, set the according feature flag in your FF4J console.
 
 #### Deploy a new backend version for the microservice
-
+Make sure to replace XX with your assigned workshop number
 ```
-oc new-app -e ORDERS_SERVICE_IP=orders-service-ws1.18.207.174.41.xip.io --docker-image=jetzlstorfer/backend-v2:latest
+oc new-app -e ORDERS_SERVICE_IP=orders-service-wsXX.18.207.174.41.xip.io --docker-image=jetzlstorfer/backend-v2:latest
 oc expose service backend-v2 
 ```
 
@@ -202,5 +193,6 @@ You will be able to switch on/off your new microservice from here.
 1. When making an order now the order will be operated and persisted by the OrderService instead of the monolithic booking service (in fact, the booking service calls the OrderService).
 
 1. We can verify the service flow in Dynatrace. 
+
 
 
