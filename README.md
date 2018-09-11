@@ -58,7 +58,7 @@ lift and shift the monolith to OpenShift
 
 1. Create new application
     ```
-    oc new-app -e MYSQL_SERVICE_HOST=your-mysql-host -e MYSQL_SERVICE_PORT=3306 --docker-image=jetzlstorfer/ticket-monster-monolith:latest
+    oc new-app -e MYSQL_SERVICE_HOST=mysql -e MYSQL_SERVICE_PORT=3306 --docker-image=jetzlstorfer/ticket-monster-monolith:latest
 
     ```
 
