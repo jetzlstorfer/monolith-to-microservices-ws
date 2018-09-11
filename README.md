@@ -194,5 +194,14 @@ You will be able to switch on/off your new microservice from here.
 
 1. We can verify the service flow in Dynatrace. 
 
+end of the lab :)
 
+# Troubleshooting
+Some useful OpenShift cli commands:
+- `oc get pods`: retrieve all pods
+- `oc get services`: retrieve all services
+- `oc get routes`: get all exposed routes
+- `oc delete all -l app=<yourappname>`: delete an app and all assigned resources to this app
+- `oc logs <pod-name>`: get the logs of a pod
+- `oc rsh <pod-name>`: open a remote shell on this pod
 
