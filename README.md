@@ -196,6 +196,9 @@ You will be able to switch on/off your new microservice from here.
 
 end of the lab :)
 
+You can continue with the [runbook automation lab](https://github.com/dynatrace-innovationlab/remediation-ansible) from this point.
+
+
 # Troubleshooting
 Some useful OpenShift cli commands:
 - `oc get pods`: retrieve all pods
